@@ -1,5 +1,5 @@
-# Use the official PHP image with Apache
-FROM php:8.2-apache
+# Use the NEWEST PHP version to match your dependencies
+FROM php:8.4-apache
 
 # 1. Install system dependencies and MongoDB extension
 RUN apt-get update && apt-get install -y \
