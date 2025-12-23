@@ -26,11 +26,17 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Copy the backend code into the container
 COPY . /var/www/html
 
-# Set permissions for Laravel
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+# 2. Set strict permissions for Laravel storage and cache
+# This prevents "The stream or file could not be opened" errors
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Install PHP dependencies
+# 3. Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
+
+# 4. KILL THE CACHE
+# This forces Laravel to forget local settings and use your Render Env Variables
+RUN php artisan optimize:clear
 
 # Update Apache configuration to point to public folder
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
