@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-enable mongodb \
     && docker-php-ext-install pdo_mysql zip
 
-# Enable Apache mod_rewrite
+# Enable Apache mod_rewrite for Laravel routing
 RUN a2enmod rewrite
 
 WORKDIR /var/www/html
@@ -22,10 +22,10 @@ WORKDIR /var/www/html
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copy code
+# Copy the backend code
 COPY . /var/www/html
 
-# 2. Fix Permissions
+# 2. Fix Permissions for Render
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
@@ -37,8 +37,8 @@ ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 
-# 4. STARTUP COMMAND: Clear cache ONLY when the container starts
-# This ensures it sees your Render Environment Variables (like DB_DSN)
+# 4. CRITICAL FIX: Run optimize:clear only when the container STARTS
+# This prevents the "Exit Code 1" build error
 CMD php artisan optimize:clear && apache2-foreground
 
 EXPOSE 80
